@@ -1,0 +1,186 @@
+*{
+  user-select: none;
+}
+body {
+    margin: 0;
+    padding: 0;
+    font-family:Verdana, Geneva, Tahoma, sans-serif;
+    background-color: #a1a0a0;
+  }
+  a{
+    cursor: default;
+  }
+  nav ul {
+    list-style: none;
+    background-color: #333;
+    padding: 0;
+    margin: 0;
+    display: flex;
+  }
+  
+  nav ul li {
+    position: relative;
+  }
+  
+  nav ul li a {
+    display: block;
+    color: white;
+    text-decoration: none;
+    padding: 6px 15px;
+  }
+  
+  nav ul li:hover {
+    background-color: #555;
+  }
+  
+  nav ul li:hover > .submenu {
+    display: block;
+    z-index: 5;
+  }
+  
+  .submenu {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    background-color: #555;
+    width: 200px;
+  }
+  
+  .submenu li {
+    border-bottom: 1px solid #888;
+  }
+  
+  .submenu li a {
+    color: white;
+    padding: 10px;
+    display: block;
+  }
+  
+  .submenu li a:hover {
+    background-color: #777;
+  }
+  .ventana{
+    background-color: #e2e2e2;
+    position: absolute;
+    top:20%;
+    padding-bottom: 2%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    width: 500px;
+    border-radius: 5px;
+    box-shadow: 5px 5px 10px;
+  }
+  
+  .marco{
+    width: 500px;
+    display: flex;
+    flex-direction: column;
+    background-color: #e2e2e2;
+    border: 1px solid black;
+  }
+
+  .field{
+    display: flex;
+    width: 450px;
+    justify-content: space-between;
+    align-items: center;
+    margin: 10px;
+  }
+
+  .field #ipCuit {
+    width: 150px;
+    position: relative;
+    left: 31px;
+  }
+  .field input {
+    width: 300px;
+  }
+  #app{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .ventana button{
+    margin-top: 6%;
+  }
+
+  .tarjeta {
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    width: 224px;
+    height: 107px;
+    border: 1px solid black;
+    padding: 10px;
+    margin: 3px;
+    background-color: rgb(190, 190, 190);
+}
+
+.img-pool {
+    width: 128px;
+    margin-right: 10px;
+}
+.img-mesa {
+    width: 128px;
+    margin-right: 10px;
+}
+
+.cronometro {
+    font-size: 18px;
+    margin-bottom: 10px;
+}
+
+.nombre {
+    font-size: 18px;
+    margin-bottom: 10px;
+}
+
+.salon{
+  display: flex;
+
+}
+.visible{
+  display: none;
+}
+
+.container{
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+#sectorMesas{
+  display: flex;
+  flex-wrap: wrap;
+  width: 60%;
+  justify-content: flex-start;
+  align-content: flex-start;
+}
+#sectorPools{
+  display: flex;
+  flex-wrap: wrap;
+  width: 40%;
+  align-content: flex-start;
+}
+.tarjeta .container div {
+  display: flex;
+}
+.tarjeta .container div button{
+  padding: 0px;
+  margin: 3px;
+  filter: hue-rotate(332deg);
+  border: none;
+  scale: 1.5;
+  background-color: transparent;
+}
+.tarjeta .container div button:hover{
+  scale: 1.8;
+  cursor: pointer;
+}
+.importe{
+  margin-top: 16px;
+}

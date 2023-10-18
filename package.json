@@ -1,0 +1,17 @@
+{
+  "name": "tsunami_pool",
+  "version": "1.0.0",
+  "description": "Software de gestion de Restaurant con mesas de Pool",
+  "main": "src/main.js",
+  "scripts": {
+    "start": "electron ."
+  },
+  "author": "Matias A. Eguia",
+  "license": "ISC",
+  "devDependencies": {
+    "electron": "^25.5.0"
+  },
+  "dependencies": {
+    "mysql2": "^3.6.2"
+  }
+}
