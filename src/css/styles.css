@@ -61,6 +61,7 @@ body {
     background-color: #777;
   }
   .ventana{
+    z-index: 2;
     background-color: #e2e2e2;
     position: absolute;
     top:20%;
@@ -70,6 +71,20 @@ body {
     justify-content: center;
     align-items: center;
     width: 500px;
+    border-radius: 5px;
+    box-shadow: 5px 5px 10px;
+  }
+  .ventana-comanda{
+    z-index: 2;
+    background-color: #e2e2e2;
+    position: absolute;
+    top:20%;
+    padding: 2%;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    width: 300px;
     border-radius: 5px;
     box-shadow: 5px 5px 10px;
   }
@@ -121,8 +136,7 @@ body {
 }
 
 .img-pool {
-    width: 128px;
-    margin-right: 10px;
+    width: 112px;
 }
 .img-mesa {
     width: 128px;
@@ -183,4 +197,31 @@ body {
 }
 .importe{
   margin-top: 16px;
+}
+
+table{
+  border-collapse: collapse;
+  width: 100%;
+  border: 1px solid #ccc;
+  margin: 10px;
+}
+
+th, td {
+  border: 1px solid #ccc;
+  padding: 8px;
+  text-align: left;
+}
+
+th{
+  background-color: #f2f2f2;
+  font-weight: bold;
+}
+tr:nth-child(even){
+  background-color: #f2f2f2;
+}
+tr:hover{
+  background-color: #ddd;
+}
+#buscar{
+  margin-top: 10px;
 }
