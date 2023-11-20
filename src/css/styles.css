@@ -84,7 +84,7 @@ body {
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    width: 300px;
+    width: 400px;
     border-radius: 5px;
     box-shadow: 5px 5px 10px;
   }
@@ -199,9 +199,10 @@ body {
   margin-top: 16px;
 }
 
+
 table{
   border-collapse: collapse;
-  width: 100%;
+  width: 400px;
   border: 1px solid #ccc;
   margin: 10px;
 }
@@ -224,4 +225,8 @@ tr:hover{
 }
 #buscar{
   margin-top: 10px;
+}
+.ocupada{
+    margin-top: 10px;
+    color: red;
 }

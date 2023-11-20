@@ -1,6 +1,6 @@
 const agregarComanda=`
 <div class="ventana-comanda">
-    <input type="text" class="inputBuscar">
+    <input type="text" class="inputBuscar" placeHolder="Ingrese codigo o nombre">
     <table id="lista-comanda">
         <tr>
             <th>Descripcion</th>

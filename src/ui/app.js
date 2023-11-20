@@ -1,6 +1,15 @@
 const fs=require('fs');
-const { dialog } = require('electron');
 const {getConnection}=require('../database.js')
+
+//Ventanas
+import ventanaOpciones from "./windows/windowOption.js";
+import ventanaNuevoProveedor from "./windows/windowNewProvider.js";
+import ventanaModificarProveedor from "./windows/windowEditProvider.js";
+import ventanaAgregarComanda from "./windows/windowAddFood.js"
+import ventanaNuevoProducto from "./windows/windowNewProduct.js";
+import ventanaEstadoDeCuenta from "./windows/windowAccountStatus.js";
+import ventanaProductos from "./windows/windowProduct.js";
+import ventanaEditarProducto from "./windows/windowEditProduct.js";
 
 //Elementos capturados
 const app = document.getElementById("app");
@@ -13,22 +22,11 @@ const menuEditProv = document.getElementById("menuEditProv")
 const menuSalon = document.getElementById("menuSalon")
 const menuProduct = document.getElementById("menuProduct")
 
-//Ventanas
-import ventanaOpciones from "./windows/windowOption.js";
-import ventanaNuevoProveedor from "./windows/windowNewProvider.js";
-import ventanaModificarProveedor from "./windows/windowEditProvider.js";
-import ventanaAgregarComanda from "./windows/windowAddFood.js"
-import ventanaNuevoProducto from "./windows/windowNewProduct.js";
-import ventanaEstadoDeCuenta from "./windows/windowAccountStatus.js";
-import ventanaProductos from "./windows/windowProduct.js";
-import ventanaEditarProducto from "./windows/windowEditProduct.js";
-
-
 //Cargar el archivo Opciones
 const RUTA_OPCIONES='src/data/options.json'
 let data=fs.readFileSync(RUTA_OPCIONES,'utf8')
 const opciones=JSON.parse(data)
-const precio_minuto=opciones.tarifa / 60;
+const precio_minuto=opciones.tarifa / 60
 
 //Cargar el archivo Productos
 const RUTA_PRODUCTOS='src/data/products.json'
@@ -38,30 +36,96 @@ try {
     productos=JSON.parse(data)
     
 } catch (error) {
-    
+    console.log(error);
 }
-
-// const showMessageYesOrNo=(mensaje, titulo, funcionSi,funcionNo)=>{
-//     const opciones = {
-//         type: 'question',
-//         buttons: ['Sí', 'No'],
-//         defaultId: 0,
-//         title: titulo,
-//         message: mensaje,
-//       };
-
-//       dialog.showMessageBox(win, opciones, (respuesta) => {
-//         if (respuesta === 0) {
-//           funcionSi()
-//         } else {
-//           funcionNo()
-//         }
-//       });
-// }
+//Crear arreglo con cada mesa de pool
+let arrPools = new Array(opciones.pools)
+for (let i = 0; i < opciones.pools; i++) {
+    arrPools[i]=({idInterval:0,seg:0,min:0,hor:0, importe_pool:0, importe_comanda:0, comanda:[]});
+}
+//Crear arreglo con cada mesa
+let arrMesas = new Array(opciones.mesas)
+for (let i = 0; i < opciones.mesas; i++) {
+    arrMesas[i]=({importe_comanda:0, comanda:[]});
+}
 
 //funcion que carga las ventanas en main.html
 const cargarVentana=(ventana)=> {
     app.innerHTML = ventana;
+}
+
+const showComanda = (i,isPool) => {
+        cargarVentana(ventanaAgregarComanda)
+        const btnCancelarComanda=document.getElementById('btnCancelarComanda')
+        const listProducts=document.getElementById('lista-comanda');
+        productos.forEach((prod) => {
+            listProducts.innerHTML += `<tr><td>${prod.nombre}</td><td>$ ${prod.precio}</td></tr>`;
+        })
+        listProducts.addEventListener('click',(e)=>{
+            if(isPool){
+                if(e.target.previousElementSibling){
+                    arrPools[i].comanda.push({
+                        descripcion:e.target.previousElementSibling.textContent,
+                        precio:parseFloat(e.target.textContent.match(/\d+/g).join('.')) || 0,
+                    })
+                        arrPools[i].importe_comanda+=parseFloat(e.target.textContent.match(/\d+/g).join('.'))
+                        cargarVentana('')
+                    }
+                    if(e.target.nextElementSibling){
+                    arrPools[i].comanda.push({
+                        descripcion:e.target.textContent,
+                        precio:parseFloat(e.target.nextElementSibling.textContent.match(/\d+/g).join('.')),
+                    })
+                        arrPools[i].importe_comanda+=parseFloat(e.target.nextElementSibling.textContent.match(/\d+/g).join('.'))
+                        cargarVentana('')
+                    }
+            }else{
+                if(e.target.previousElementSibling){
+                    arrMesas[i].comanda.push({
+                        descripcion:e.target.previousElementSibling.textContent,
+                        precio:parseFloat(e.target.textContent.match(/\d+/g).join('.')) || 0,
+                    })
+                    arrMesas[i].importe_comanda+=parseFloat(e.target.textContent.match(/\d+/g).join('.'))
+                    cargarVentana('')
+                }
+                if(e.target.nextElementSibling){
+                    arrMesas[i].comanda.push({
+                        descripcion:e.target.textContent,
+                        precio:parseFloat(e.target.nextElementSibling.textContent.match(/\d+/g).join('.')),
+                    })
+                    arrMesas[i].importe_comanda+=parseFloat(e.target.nextElementSibling.textContent.match(/\d+/g).join('.'))
+                    cargarVentana('')
+                }
+            }
+        })
+
+        btnCancelarComanda.addEventListener('click',()=>{
+            cargarVentana('');
+        })
+}
+const showAccountStatus = (i,isPool)=>{
+    cargarVentana(ventanaEstadoDeCuenta);
+    const listProducts=document.getElementById('lista-comanda')
+    const btnCobrar=document.getElementById('btnCobrar')
+    const btnCancelar=document.getElementById('btnCancelar')
+    if(isPool){ 
+        arrPools[i].comanda.forEach((prod) => {
+        listProducts.innerHTML += `<tr><td>${prod.descripcion}</td><td>$ ${prod.precio.toFixed(2)}</td></tr>`;
+        })
+        listProducts.innerHTML+=`<p>Comanda: $ ${parseFloat(arrPools[i].importe_comanda).toFixed(2)}</p>`
+        listProducts.innerHTML+=`<p>Pool: $ ${arrPools[i].importe_pool.toFixed(2)}</p>`
+        listProducts.innerHTML+=`<hr>`
+        listProducts.innerHTML+=`<p>Total: $${(parseFloat(arrPools[i].importe_comanda)+parseFloat(arrPools[i].importe_pool)).toFixed(2)}`
+    }else{
+        arrMesas[i].comanda.forEach((prod) => {
+        listProducts.innerHTML += `<tr><td>${prod.descripcion}</td><td>$ ${prod.precio.toFixed(2)}</td></tr>`;
+        })
+        listProducts.innerHTML+=`<hr>`
+        listProducts.innerHTML+=`<p>Total: $${parseFloat(arrMesas[i].importe_comanda).toFixed(2)}`
+    }
+   
+      btnCancelar.addEventListener('click',()=>{cargarVentana('')})
+      btnCobrar.addEventListener('click',()=>{window.print()})
 }
 
 const showOptions=()=>{
@@ -111,6 +175,7 @@ const showNewProvider=()=>{
         }
       newProvider(objProvider);
     })
+    btnProvCancel.addEventListener('click', cargarVentana(''))
 }
 const showProducts=()=>{
     cargarVentana(ventanaProductos);
@@ -124,13 +189,13 @@ const showProducts=()=>{
 
     const renderizarProductos = () => {
         listaProductos.innerHTML = '';
-        productosParaFiltrar.forEach((prod) => {
-            listaProductos.innerHTML += `<tr><td>${prod.codigo}</td><td>${prod.nombre}</td><td>$ ${prod.precio}<a id="edit-${prod.codigo}">✍️</a><a id="delete-${prod.codigo}">🗑️</a></td></tr>`;
+        productosParaFiltrar.forEach((prod,i) => {
+            listaProductos.innerHTML += `<tr><td>${prod.codigo}</td><td>${prod.nombre}</td><td>$ ${prod.precio}</td><td><a id="edit-${i}">✍️</a><a id="delete-${i}">🗑️</a></td></tr>`;
         });
         
         listaProductos.addEventListener('click', (e)=>{
             if (e.target.id && (e.target.id.startsWith('edit-') || e.target.id.startsWith('delete-'))){
-                const indice=e.target.id.split('-')[1]-1
+                const indice=e.target.id.split('-')[1]
 
                 if(e.target.id.startsWith("edit-")){
                     editarElemento(indice);
@@ -157,15 +222,10 @@ const showProducts=()=>{
             })
         }
         const eliminarElemento=(indice)=>{
-            const eliminarProducto=()=>{
                 productos.splice(indice,1)
+                fs.writeFileSync(RUTA_PRODUCTOS,JSON.stringify(productos));
+                showProducts();
             }
-        const cancelarEliminacion=()=>{
-
-        }
-            showMessageYesOrNo(`¿Esta seguro que desea eliminar el producto ${productos[indice].codigo, productos[indice].nombre} ?`, "Eliminar Producto",eliminarProducto,cancelarEliminacion);
-
-        }
     }
     
     renderizarProductos();
@@ -241,10 +301,16 @@ const crearSalon=(mesas,pools)=>{
     for (let i = 0; i < mesas; i++) {
        sectorMesas.innerHTML+=`
             <div class="tarjeta">
+            <div class="container">
             <img class="img-mesa" src='../img/mesa.png' alt="Mesa de Restorant"/>
+            <div class="ocupada"></div>
+            </div>
                 <div class="container">
                     <div class="nombre">Mesa ${i+1}</div>
-                    <button class="btnMesa">🍽️</button>
+                    <div>
+                    <button class="btnMesa">➕</button>
+                    <button class="btnMesaCobrar" disabled>💲</button>
+                    </div>
                 </div>
             </div>`
     }
@@ -268,27 +334,39 @@ const crearSalon=(mesas,pools)=>{
                 </div>
             </div>`
     }
+
+    const botonesMesa=document.querySelectorAll(".btnMesa")
+    const ocupadas=document.querySelectorAll('.ocupada')
+    const botonesCobrarMesa=document.querySelectorAll('.btnMesaCobrar')
     const botonesHabilitar = document.querySelectorAll(".btnHabilitar");
     const botonesDetener = document.querySelectorAll(".btnDetener");
     const botonesPausar = document.querySelectorAll(".btnPausa");
     const botonesAgregar = document.querySelectorAll(".btnAgregar");
-    const botonesCobrar = document.querySelectorAll(".btnCobrar");
+    const botonesCobrarPool = document.querySelectorAll(".btnCobrar");
     const cronometros = document.querySelectorAll(".cronometro");
-    const importes = document.querySelectorAll(".importe");
+    const importesPools = document.querySelectorAll(".importe");
 
 
-    let arrPools = new Array(pools)
-    for (let i = 0; i < pools; i++) {
-        arrPools[i]=({idInterval:0,seg:0,min:0,hor:0, importe_pool:0, importe_comanda:0, comanda:[]});
-    }
-    
+   
+    botonesMesa.forEach((btn,i)=>{
+       btn.addEventListener('click',()=>{
+        showComanda(i,false);
+        botonesCobrarMesa[i].disabled=false;
+        ocupadas[i].textContent='OCUPADA'
+       })
+    })
+    botonesCobrarMesa.forEach((btn,i)=>{
+        btn.addEventListener('click',()=>{
+            showAccountStatus(i,false)
+        })
+    })
     botonesHabilitar.forEach((btn,i) =>{
         btn.addEventListener("click", ()=>{
             btn.disabled=true;
             botonesDetener[i].disabled=false;
             botonesPausar[i].disabled=false;
             botonesAgregar[i].disabled=false;
-            botonesCobrar[i].disabled=false;
+            botonesCobrarPool[i].disabled=false;
 
 
             arrPools[i].idInterval=setInterval(()=>{
@@ -297,7 +375,7 @@ const crearSalon=(mesas,pools)=>{
                     arrPools[i].seg=0;
                     arrPools[i].min++;
                     arrPools[i].importe_pool+=precio_minuto;
-                    importes[i].textContent='$ '+ arrPools[i].importe_pool.toFixed(2);
+                    importesPools[i].textContent='$ '+ arrPools[i].importe_pool.toFixed(2);
 
                 }
                 if(arrPools[i].min>=60){
@@ -305,7 +383,7 @@ const crearSalon=(mesas,pools)=>{
                     arrPools[i].hor++;
                 }
                 cronometros[i].innerHTML=arrPools[i].hor.toString().padStart(2,'0')+':'+arrPools[i].min.toString().padStart(2,'0')+':'+arrPools[i].seg.toString().padStart(2,'0');
-            },1000)
+            },1)
         })
     })
             botonesDetener.forEach((btn,i)=>{
@@ -313,17 +391,13 @@ const crearSalon=(mesas,pools)=>{
                     clearInterval(arrPools[i].idInterval);
                     botonesHabilitar[i].disabled=false;
                     botonesPausar[i].disabled=true;
-                    botonesAgregar[i].disabled=true;
-                    botonesCobrar[i].disabled=true;
+                    botonesAgregar[i].disabled=false;
+                    botonesCobrarPool[i].disabled=false;
                     btn.disabled=true;
                     arrPools[i].seg=0;
                     arrPools[i].min=0;
                     arrPools[i].hor=0;
-                    arrPools[i].importe_pool=0;
-                    arrPools[i].importe_comanda=0;
-                    arrPools[i].comanda=[];
                     cronometros[i].textContent="00:00:00";
-                    importes[i].textContent="$ 0,00";
                 })
             })
             botonesPausar.forEach((btn,i)=>{
@@ -335,50 +409,12 @@ const crearSalon=(mesas,pools)=>{
             })
             botonesAgregar.forEach((btn,i)=>{
                 btn.addEventListener('click',()=>{
-                    cargarVentana(ventanaAgregarComanda)
-                    const btnCancelarComanda=document.getElementById('btnCancelarComanda')
-                    const listProducts=document.getElementById('lista-comanda');
-                    productos.forEach((prod) => {
-                        listProducts.innerHTML += `<tr><td>${prod.nombre}</td><td>$ ${prod.precio}</td></tr>`;
-                      })
-                    listProducts.addEventListener('click',(e)=>{
-                        if(e.target.previousElementSibling){
-                        arrPools[i].comanda.push({
-                            descripcion:e.target.previousElementSibling.textContent,
-                            precio:parseFloat(e.target.textContent.match(/\d+/g).join('.')) || 0,
-                        })
-                           arrPools[i].importe_comanda+=parseFloat(e.target.textContent.match(/\d+/g).join('.'))
-                           cargarVentana('')
-                        }
-                        if(e.target.nextElementSibling){
-                        arrPools[i].comanda.push({
-                            descripcion:e.target.textContent,
-                            precio:parseFloat(e.target.nextElementSibling.textContent.match(/\d+/g).join('.')),
-                        })
-                            arrPools[i].importe_comanda+=parseFloat(e.target.nextElementSibling.textContent.match(/\d+/g).join('.'))
-                            cargarVentana('')
-                    }
-                    })
-
-                    btnCancelarComanda.addEventListener('click',()=>{
-                        cargarVentana('');
-                    })
+                    showComanda(i,true);
                 })
             })
-            botonesCobrar.forEach((btn,i)=>{
+            botonesCobrarPool.forEach((btn,i)=>{
                 btn.addEventListener('click',()=>{
-                    cargarVentana(ventanaEstadoDeCuenta);
-                    const listProducts=document.getElementById('lista-comanda')
-                    const btnCancelar=document.getElementById('btnCancelar')
-                    console.log(arrPools);
-                    arrPools[i].comanda.forEach((prod) => {
-                        listProducts.innerHTML += `<tr><td>${prod.descripcion}</td><td>$ ${prod.precio}</td></tr>`;
-                      })
-                      listProducts.innerHTML+=`<p>Comanda: $ ${parseFloat(arrPools[i].importe_comanda)}</p>`
-                      listProducts.innerHTML+=`<p>Pool: $ ${arrPools[i].importe_pool}</p>`
-                      listProducts.innerHTML+=`<hr>`
-                      listProducts.innerHTML+=`<p>Total: $${parseFloat(arrPools[i].importe_comanda)+parseFloat(arrPools[i].importe_pool)}`
-                      btnCancelar.addEventListener('click',()=>{cargarVentana('')})
+                    showAccountStatus(i,true)
                     })
             })
 }
