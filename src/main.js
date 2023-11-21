@@ -15,7 +15,7 @@ const createWindow=()=>{
             backgroundThrottling: false,
         }
     })
-    
+    //win.setMenu(null);
     win.loadFile('src/ui/main.html')
 
 }

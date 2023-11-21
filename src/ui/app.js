@@ -34,33 +34,81 @@ data=fs.readFileSync(RUTA_PRODUCTOS,'utf8')
 let productos=[];
 try {
     productos=JSON.parse(data)
-    
 } catch (error) {
     console.log(error);
 }
+
 //Crear arreglo con cada mesa de pool
 let arrPools = new Array(opciones.pools)
 for (let i = 0; i < opciones.pools; i++) {
     arrPools[i]=({idInterval:0,seg:0,min:0,hor:0, importe_pool:0, importe_comanda:0, comanda:[]});
 }
+
 //Crear arreglo con cada mesa
 let arrMesas = new Array(opciones.mesas)
 for (let i = 0; i < opciones.mesas; i++) {
     arrMesas[i]=({importe_comanda:0, comanda:[]});
 }
-
 //funcion que carga las ventanas en main.html
 const cargarVentana=(ventana)=> {
     app.innerHTML = ventana;
 }
+const detenerTiempo = (i) => {
+    const botonesHabilitar = document.querySelectorAll(".btnHabilitar");
+    const botonesDetener = document.querySelectorAll(".btnDetener");
+    const botonesPausar = document.querySelectorAll(".btnPausa");
+    const botonesAgregar = document.querySelectorAll(".btnAgregar");
+    const botonesCobrarPool = document.querySelectorAll(".btnCobrar");
+    const cronometros = document.querySelectorAll(".cronometro");
+    
+    clearInterval(arrPools[i].idInterval);
+    botonesHabilitar[i].disabled=false;
+    botonesPausar[i].disabled=true;
+    botonesAgregar[i].disabled=false;
+    botonesCobrarPool[i].disabled=false;
+    botonesDetener[i].disabled=true;
+    arrPools[i].seg=0;
+    arrPools[i].min=0;
+    arrPools[i].hor=0;
+    cronometros[i].textContent="00:00:00";
+}
+const cerrarMesa = (i, isPool) => {
+    const importesPools = document.querySelectorAll(".importe");
+    const botonesAgregar = document.querySelectorAll(".btnAgregar");
+    const botonesCobrarPool = document.querySelectorAll(".btnCobrar");
+    const ocupadas=document.querySelectorAll('.ocupada');
+    const botonesCobrarMesa=document.querySelectorAll('.btnMesaCobrar');
 
+    if(isPool){
+        detenerTiempo(i);
+        arrPools[i].importe_pool=0;
+        arrPools[i].importe_comanda=0;
+        arrPools[i].comanda=[];
+        botonesAgregar[i].disabled=true;
+        botonesCobrarPool[i].disabled=true;
+        importesPools[i].textContent="$ 0,00"
+    }else{
+        arrMesas[i].importe_comanda=0;
+        arrMesas[i].comanda=[];
+        ocupadas[i].textContent="";
+        botonesCobrarMesa[i].disabled=true;
+    }
+    
+
+}
 const showComanda = (i,isPool) => {
         cargarVentana(ventanaAgregarComanda)
         const btnCancelarComanda=document.getElementById('btnCancelarComanda')
         const listProducts=document.getElementById('lista-comanda');
-        productos.forEach((prod) => {
+        const buscador=document.getElementById('buscar');
+
+        let productosParaFiltrar = [...productos];
+        const renderizarProductos=()=>{
+            listProducts.innerHTML='';
+            productosParaFiltrar.forEach((prod) => {
             listProducts.innerHTML += `<tr><td>${prod.nombre}</td><td>$ ${prod.precio}</td></tr>`;
-        })
+        })}
+       
         listProducts.addEventListener('click',(e)=>{
             if(isPool){
                 if(e.target.previousElementSibling){
@@ -98,37 +146,158 @@ const showComanda = (i,isPool) => {
                 }
             }
         })
-
+        renderizarProductos();
+        buscador.addEventListener('input',()=>{
+                const criterioBusqueda = buscador.value.toLowerCase();
+                productosParaFiltrar = productos.filter((prod) =>
+                    prod.nombre.toLowerCase().includes(criterioBusqueda) ||
+                    prod.codigo.toLowerCase().includes(criterioBusqueda)
+                );
+                renderizarProductos();
+            })
         btnCancelarComanda.addEventListener('click',()=>{
             cargarVentana('');
         })
 }
-const showAccountStatus = (i,isPool)=>{
+const showAccountStatus = (i,isPool) => {
     cargarVentana(ventanaEstadoDeCuenta);
     const listProducts=document.getElementById('lista-comanda')
     const btnCobrar=document.getElementById('btnCobrar')
     const btnCancelar=document.getElementById('btnCancelar')
     if(isPool){ 
-        arrPools[i].comanda.forEach((prod) => {
-        listProducts.innerHTML += `<tr><td>${prod.descripcion}</td><td>$ ${prod.precio.toFixed(2)}</td></tr>`;
-        })
+
+        const renderizarProductos = ()=>{
+            listProducts.innerHTML='';
+            arrPools[i].comanda.forEach((prod,i) => {
+            listProducts.innerHTML += `<tr><td>${prod.descripcion}</td><td>$ ${prod.precio.toFixed(2)}<a id="delete-${i}">🗑️</a></td></tr>`;
+            })
+        }
+
+        renderizarProductos();
         listProducts.innerHTML+=`<p>Comanda: $ ${parseFloat(arrPools[i].importe_comanda).toFixed(2)}</p>`
         listProducts.innerHTML+=`<p>Pool: $ ${arrPools[i].importe_pool.toFixed(2)}</p>`
         listProducts.innerHTML+=`<hr>`
         listProducts.innerHTML+=`<p>Total: $${(parseFloat(arrPools[i].importe_comanda)+parseFloat(arrPools[i].importe_pool)).toFixed(2)}`
     }else{
-        arrMesas[i].comanda.forEach((prod) => {
-        listProducts.innerHTML += `<tr><td>${prod.descripcion}</td><td>$ ${prod.precio.toFixed(2)}</td></tr>`;
-        })
+        const renderizarProductos = ()=>{
+            listProducts.innerHTML='';
+            arrMesas[i].comanda.forEach((prod,i) => {
+            listProducts.innerHTML += `<tr><td>${prod.descripcion}</td><td>$ ${prod.precio.toFixed(2)}<a id="delete-${i}">🗑️</a></td></tr>`;
+            })
+        }
+
+        renderizarProductos();
+
         listProducts.innerHTML+=`<hr>`
         listProducts.innerHTML+=`<p>Total: $${parseFloat(arrMesas[i].importe_comanda).toFixed(2)}`
     }
    
-      btnCancelar.addEventListener('click',()=>{cargarVentana('')})
-      btnCobrar.addEventListener('click',()=>{window.print()})
-}
+    listProducts.addEventListener('click', (e)=>{
+        if (e.target.id && e.target.id.startsWith('delete-')){
+            const indice=e.target.id.split('-')[1]
 
-const showOptions=()=>{
+            if(e.target.id.startsWith("delete-")){
+                if(isPool){
+                    arrPools[i].importe_comanda-=arrPools[i].comanda[indice].precio;
+                    arrPools[i].comanda.splice(indice,1);
+                    showAccountStatus(i,true)
+                    renderizarProductos();
+                }else{
+                    arrMesas[i].importe_comanda-=arrMesas[i].comanda[indice].precio;
+                    arrMesas[i].comanda.splice(indice,1);
+                    showAccountStatus(i,false)
+                    renderizarProductos();
+                }
+            }
+        }
+    })
+
+    btnCancelar.addEventListener('click',()=>{cargarVentana('')})
+    btnCobrar.addEventListener('click',()=>{isPool? generarComprobante(i,true):generarComprobante(i,false)})
+}
+const generarComprobante=(i, isPool) => {
+    cargarVentana('');
+    let contenido='';
+    if(isPool){
+        contenido=`
+        <hr style="width: 220px; margin:0px">
+        ***************************<br>
+        ********Tsunami Pool********<br>
+        ***************************<br>
+        <hr style="width: 220px; margin:0px">
+        <strong>Mesa de Pool Nº ${i+1}</strong><br>
+        FECHA: ${new Date().toLocaleDateString()}<br>
+        HORA: ${new Date().toLocaleTimeString()}<br>
+        <div style="width: 220px;"> <!-- Contenedor centrado -->
+            <table style="width: 100%;">
+            <tr>
+                <td colspan="2" style="border-bottom: 1px solid black;"></td>
+            </tr>
+            <tr>
+                <th>Descripción</th>
+                <th>Precio</th>
+            </tr>
+            ${arrPools[i].comanda.map((prod) => {
+                return `<tr><td>${prod.descripcion}</td><td>$ ${prod.precio.toFixed(2)}</td></tr>`;
+            }).join('')}
+            <tr><td></td></tr>
+            <tr><td></td></tr>
+            <tr><td></td></tr>
+            <tr><td>Pool:</td><td>$ ${arrPools[i].importe_pool.toFixed(2)}</td></tr>
+            <tr><td></td></tr>
+            <tr><td></td></tr>
+            <tr>
+                <td colspan="2" style="border-bottom: 1px solid black;"></td>
+            </tr>
+            <tr><td><strong>TOTAL:</strong></td> <td><strong>$${(arrPools[i].importe_comanda+arrPools[i].importe_pool).toFixed(2)}</strong></td></tr>
+            </table>
+        </div>
+        `
+    let ventanaImprimir = window.open('', '_blank');
+    ventanaImprimir.document.write(contenido);
+    ventanaImprimir.document.close();
+    ventanaImprimir.print();
+    detenerTiempo(i);
+    cerrarMesa(i,true)
+    }else{
+        contenido=`
+        <hr style="width: 220px; margin:0px">
+        ***************************<br>
+        ********Tsunami Pool********<br>
+        ***************************<br>
+        <hr style="width: 220px; margin:0px">
+        <strong>Mesa Nº ${i+1}</strong><br>
+        FECHA: ${new Date().toLocaleDateString()}<br>
+        HORA: ${new Date().toLocaleTimeString()}<br>
+        <div style="width: 220px;"> <!-- Contenedor centrado -->
+            <table style="width: 100%;">
+            <tr>
+                <td colspan="2" style="border-bottom: 1px solid black;"></td>
+            </tr>
+            <tr>
+                <th>Descripción</th>
+                <th>Precio</th>
+            </tr>
+            ${arrMesas[i].comanda.map((prod) => {
+                return `<tr><td>${prod.descripcion}</td><td>$ ${prod.precio.toFixed(2)}</td></tr>`;
+            }).join('')}
+            <tr><td></td></tr>
+            <tr><td></td></tr>
+            <tr>
+                <td colspan="2" style="border-bottom: 1px solid black;"></td>
+            </tr>
+            <tr><td><strong>TOTAL:</strong></td> <td><strong>$${(arrMesas[i].importe_comanda).toFixed(2)}</strong></td></tr>
+            </table>
+        </div>
+        `
+    let ventanaImprimir = window.open('', '_blank');
+    ventanaImprimir.document.write(contenido);
+    ventanaImprimir.document.close();
+    ventanaImprimir.print();
+    cerrarMesa(i,false)
+    }
+}
+const showOptions=() => {
     cargarVentana(ventanaOpciones);
     document.getElementById('cantidadMesas').value=opciones.mesas;
     document.getElementById('cantidadPools').value=opciones.pools;
@@ -150,7 +319,6 @@ const showOptions=()=>{
             cargarVentana("");
         });
 }  
-
 const showNewProvider=()=>{
     cargarVentana(ventanaNuevoProveedor);
     const ipRazonSocial=document.getElementById('ipRazonSocial')
@@ -220,6 +388,7 @@ const showProducts=()=>{
                 fs.writeFileSync(RUTA_PRODUCTOS,JSON.stringify(productos));
                 showProducts();
             })
+            btnCancel.addEventListener('click',()=>{cargarVentana('')})
         }
         const eliminarElemento=(indice)=>{
                 productos.splice(indice,1)
@@ -243,7 +412,6 @@ const showProducts=()=>{
     btnCancelar.addEventListener('click',()=>cargarVentana(''));
     
 }
-
 const showNewProduct=()=>{
     cargarVentana(ventanaNuevoProducto)
     const btnOk=document.getElementById('btnOk')
@@ -376,30 +544,21 @@ const crearSalon=(mesas,pools)=>{
                     arrPools[i].min++;
                     arrPools[i].importe_pool+=precio_minuto;
                     importesPools[i].textContent='$ '+ arrPools[i].importe_pool.toFixed(2);
-
                 }
                 if(arrPools[i].min>=60){
                     arrPools[i].min=0;
                     arrPools[i].hor++;
                 }
                 cronometros[i].innerHTML=arrPools[i].hor.toString().padStart(2,'0')+':'+arrPools[i].min.toString().padStart(2,'0')+':'+arrPools[i].seg.toString().padStart(2,'0');
-            },1)
+            },10)
         })
     })
             botonesDetener.forEach((btn,i)=>{
                 btn.addEventListener('click',()=>{
-                    clearInterval(arrPools[i].idInterval);
-                    botonesHabilitar[i].disabled=false;
-                    botonesPausar[i].disabled=true;
-                    botonesAgregar[i].disabled=false;
-                    botonesCobrarPool[i].disabled=false;
-                    btn.disabled=true;
-                    arrPools[i].seg=0;
-                    arrPools[i].min=0;
-                    arrPools[i].hor=0;
-                    cronometros[i].textContent="00:00:00";
+                    detenerTiempo(i);
                 })
             })
+
             botonesPausar.forEach((btn,i)=>{
                 btn.addEventListener('click',()=>{
                         btn.disabled=true;
@@ -407,11 +566,13 @@ const crearSalon=(mesas,pools)=>{
                         clearInterval(arrPools[i].idInterval);
                 })
             })
+
             botonesAgregar.forEach((btn,i)=>{
                 btn.addEventListener('click',()=>{
                     showComanda(i,true);
                 })
             })
+
             botonesCobrarPool.forEach((btn,i)=>{
                 btn.addEventListener('click',()=>{
                     showAccountStatus(i,true)
