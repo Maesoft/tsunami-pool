@@ -1,11 +1,11 @@
 const fs=require('fs');
-const {getConnection}=require('../database.js')
+const {getConnection}=require('../database.js');
 
 //Ventanas
 import ventanaOpciones from "./windows/windowOption.js";
 import ventanaNuevoProveedor from "./windows/windowNewProvider.js";
 import ventanaModificarProveedor from "./windows/windowEditProvider.js";
-import ventanaAgregarComanda from "./windows/windowAddFood.js"
+import ventanaAgregarComanda from "./windows/windowAddFood.js";
 import ventanaNuevoProducto from "./windows/windowNewProduct.js";
 import ventanaEstadoDeCuenta from "./windows/windowAccountStatus.js";
 import ventanaProductos from "./windows/windowProduct.js";
@@ -18,19 +18,19 @@ const sectorPools = document.getElementById("sectorPools");
 const salon = document.getElementById("salon");
 const menuOpt = document.getElementById("menuOpt");
 const menuNewProv = document.getElementById("menuNewProv");
-const menuEditProv = document.getElementById("menuEditProv")
-const menuSalon = document.getElementById("menuSalon")
-const menuProduct = document.getElementById("menuProduct")
+const menuEditProv = document.getElementById("menuEditProv");
+const menuSalon = document.getElementById("menuSalon");
+const menuProduct = document.getElementById("menuProduct");
 
 //Cargar el archivo Opciones
-const RUTA_OPCIONES='src/data/options.json'
-let data=fs.readFileSync(RUTA_OPCIONES,'utf8')
-const opciones=JSON.parse(data)
-const precio_minuto=opciones.tarifa / 60
+const RUTA_OPCIONES='src/data/options.json';
+let data=fs.readFileSync(RUTA_OPCIONES,'utf8');
+const opciones=JSON.parse(data);
+const precio_minuto=opciones.tarifa / 60;
 
 //Cargar el archivo Productos
-const RUTA_PRODUCTOS='src/data/products.json'
-data=fs.readFileSync(RUTA_PRODUCTOS,'utf8')
+const RUTA_PRODUCTOS='src/data/products.json';
+data=fs.readFileSync(RUTA_PRODUCTOS,'utf8');
 let productos=[];
 try {
     productos=JSON.parse(data)
@@ -158,6 +158,7 @@ const showComanda = (i,isPool) => {
         btnCancelarComanda.addEventListener('click',()=>{
             cargarVentana('');
         })
+    buscador.focus();
 }
 const showAccountStatus = (i,isPool) => {
     cargarVentana(ventanaEstadoDeCuenta);
@@ -310,10 +311,7 @@ const showOptions=() => {
             opciones.pools=document.getElementById('cantidadPools').value
             opciones.tarifa=document.getElementById('tarifa').value
             fs.writeFileSync(RUTA_OPCIONES,JSON.stringify(opciones))
-            cargarVentana("");
-            sectorMesas.innerHTML="";
-            sectorPools.innerHTML="";
-            crearSalon(opciones.mesas,opciones.pools)
+            window.close()
         });
         btnOptCancel.addEventListener("click", () => {
             cargarVentana("");
@@ -364,12 +362,13 @@ const showProducts=()=>{
         listaProductos.addEventListener('click', (e)=>{
             if (e.target.id && (e.target.id.startsWith('edit-') || e.target.id.startsWith('delete-'))){
                 const indice=e.target.id.split('-')[1]
-
+                const elementoSeleccionado = productos.indexOf(productos.find(producto => producto.nombre === productosParaFiltrar[indice].nombre));
+                
                 if(e.target.id.startsWith("edit-")){
-                    editarElemento(indice);
+                    editarElemento(elementoSeleccionado);
                 }
                 if(e.target.id.startsWith("delete-")){
-                    eliminarElemento(indice);
+                    eliminarElemento(elementoSeleccionado);
                 }
             }
         })
@@ -380,6 +379,7 @@ const showProducts=()=>{
              document.getElementById('precio').value=productos[indice].precio;
             const btnOk=document.getElementById('btnOk');
             const btnCancel=document.getElementById('btnCancel');    
+            
             
             btnOk.addEventListener('click',()=>{
                 productos[indice].codigo=document.getElementById('codigo').value
@@ -465,7 +465,42 @@ const showEditProvider=()=>{
         
     })
 }
+const saveMesas = () => {
+    data = {mesas: arrMesas, pools: arrPools}
+    try {
+        fs.writeFileSync('src/data/temp.json',JSON.stringify(data))
+    } catch (error) {
+        console.log(error);
+    }
+    }
+const loadMesas = () => {
+    const ocupadas=document.querySelectorAll('.ocupada') 
+    const botonesCobrarMesa=document.querySelectorAll('.btnMesaCobrar')
+    const botonesHabilitar = document.querySelectorAll(".btnHabilitar");
+    const importesPools = document.querySelectorAll(".importe");
+    try {
+        data=fs.readFileSync('src/data/temp.json','utf8');
+        const parsed=JSON.parse(data);
+        arrMesas=parsed.mesas
+        arrPools=parsed.pools
+    } catch (error) {
+        console.log(error);
+    }
+    arrMesas.forEach((mesa,i)=>{
+        if(mesa.importe_comanda > 0){
+            ocupadas[i].textContent="OCUPADA";
+            botonesCobrarMesa[i].disabled=false;
+        } 
+    })
+    arrPools.forEach((pool,i)=>{
+        if(pool.importe_pool > 0){
+            botonesHabilitar[i].click()
+            importesPools[i].textContent='$ ' + pool.importe_pool.toFixed(2)
+        } 
+    })
+    }
 const crearSalon=(mesas,pools)=>{
+
     for (let i = 0; i < mesas; i++) {
        sectorMesas.innerHTML+=`
             <div class="tarjeta">
@@ -550,7 +585,7 @@ const crearSalon=(mesas,pools)=>{
                     arrPools[i].hor++;
                 }
                 cronometros[i].innerHTML=arrPools[i].hor.toString().padStart(2,'0')+':'+arrPools[i].min.toString().padStart(2,'0')+':'+arrPools[i].seg.toString().padStart(2,'0');
-            },10)
+            },1000)
         })
     })
             botonesDetener.forEach((btn,i)=>{
@@ -578,6 +613,8 @@ const crearSalon=(mesas,pools)=>{
                     showAccountStatus(i,true)
                     })
             })
+            loadMesas()
+            setInterval(saveMesas,5000)
 }
 document.addEventListener('DOMContentLoaded', () => {
     //Click en Opciones
@@ -585,13 +622,13 @@ document.addEventListener('DOMContentLoaded', () => {
         showOptions()
     });
     //Click en Nuevo Proveedores
-    menuNewProv.addEventListener("click", () => {
-        showNewProvider()
-    });
+    // menuNewProv.addEventListener("click", () => {
+    //     showNewProvider()
+    // });
     //Click en Modificar Proveedores
-    menuEditProv.addEventListener("click", () => {
-        showEditProvider()
-    });
+    // menuEditProv.addEventListener("click", () => {
+    //     showEditProvider()
+    // });
     //Click en Productos
     menuProduct.addEventListener("click", () => {
         showProducts();

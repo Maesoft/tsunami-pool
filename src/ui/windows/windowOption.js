@@ -12,6 +12,7 @@ const ventanaOpciones=`
     <label for="tarifa">Tarifa por Hora:</label>
     <input type="number" id="tarifa" name="tarifa" step="100"><br><br>
     
+    <h6>Atencion: Si guarda, el programa se cerrara para poder aplicar los cambios.</h6>
     <div>
     <button id="btnOptOk">&#9989; Guardar</button>
     <button id="btnOptCancel">&#10060; Cancelar</button>
